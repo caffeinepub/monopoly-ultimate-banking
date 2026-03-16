@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("/assets/fonts/BricolageGrotesque.woff2") format("woff2");
+  font-weight: 200 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Figtree";
+  src: url("/assets/fonts/Figtree.woff2") format("woff2");
+  font-weight: 300 900;
+  font-display: swap;
+}
+
+:root {
+  /* Board colors */
+  --board-bg: oklch(0.22 0.04 145);
+  --board-cell: oklch(0.97 0.01 90);
+  --board-corner: oklch(0.92 0.02 90);
+  --board-center: oklch(0.88 0.06 145);
+  --board-border: oklch(0.3 0.05 145);
+  --board-text: oklch(0.15 0.02 145);
+  --board-text-muted: oklch(0.35 0.02 145);
+  --board-price: oklch(0.3 0.05 145);
+  --board-accent: oklch(0.35 0.08 145);
+  --board-logo: oklch(0.18 0.08 145);
+  --board-logo-sub: oklch(0.28 0.07 145);
+
+  /* App colors */
+  --background: oklch(0.1 0.02 250);
+  --foreground: oklch(0.97 0.01 250);
+  --card: oklch(0.14 0.02 250);
+  --card-foreground: oklch(0.97 0.01 250);
+  --popover: oklch(0.14 0.02 250);
+  --popover-foreground: oklch(0.97 0.01 250);
+  --primary: oklch(0.6 0.18 145);
+  --primary-foreground: oklch(0.1 0.01 145);
+  --secondary: oklch(0.2 0.03 250);
+  --secondary-foreground: oklch(0.9 0.01 250);
+  --muted: oklch(0.18 0.02 250);
+  --muted-foreground: oklch(0.55 0.02 250);
+  --accent: oklch(0.22 0.03 250);
+  --accent-foreground: oklch(0.9 0.01 250);
+  --destructive: oklch(0.55 0.2 25);
+  --destructive-foreground: oklch(0.97 0.01 25);
+  --border: oklch(0.22 0.03 250);
+  --input: oklch(0.2 0.02 250);
+  --ring: oklch(0.6 0.18 145);
+  --radius: 0.5rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: oklch(var(--background));
+  color: oklch(var(--foreground));
+  font-family: "Figtree", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.board-bg {
+  background-color: var(--board-bg);
+}
+
+.font-display {
+  font-family: "Bricolage Grotesque", sans-serif;
+}
+
+@keyframes dice-roll {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  15% {
+    transform: rotate(-20deg) scale(1.15);
+  }
+  30% {
+    transform: rotate(15deg) scale(0.9);
+  }
+  45% {
+    transform: rotate(-10deg) scale(1.1);
+  }
+  60% {
+    transform: rotate(8deg) scale(0.95);
+  }
+  75% {
+    transform: rotate(-5deg) scale(1.05);
+  }
+  90% {
+    transform: rotate(3deg) scale(0.98);
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+.dice-rolling {
+  animation: dice-roll 0.25s ease-in-out infinite;
+}
+
+@keyframes token-hop {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  40% {
+    transform: translateY(-5px) scale(1.3);
+  }
+  70% {
+    transform: translateY(-2px) scale(1.1);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.token-hop {
+  animation: token-hop 0.15s ease-out;
+}
