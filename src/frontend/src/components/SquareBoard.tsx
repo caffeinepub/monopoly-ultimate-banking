@@ -1,6 +1,6 @@
 import type React from "react";
 import { useEffect, useState } from "react";
-import { COLOR_MAP } from "../data/board";
+import { COLOR_MAP, PLAYER_ANIMALS } from "../data/board";
 import type { BoardSpace, Player, Property } from "../types/game";
 
 interface SquareBoardProps {
@@ -306,7 +306,7 @@ function BoardCell({
         )}
       </div>
 
-      {/* Player tokens */}
+      {/* Player tokens — animal emojis (larger & more visible) */}
       {playersHere.length > 0 && (
         <div
           className="flex flex-wrap gap-[1px] justify-center flex-shrink-0"
@@ -321,19 +321,26 @@ function BoardCell({
                   : ""
               }
               style={{
-                width: 8,
-                height: 8,
+                width: 20,
+                height: 20,
                 backgroundColor: p.color,
-                border: "1.5px solid white",
+                border: "2px solid white",
                 borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 12,
+                lineHeight: 1,
                 boxShadow:
                   isAnimatingHere && p.id === animatingPlayer?.playerId
-                    ? `0 0 6px ${p.color}, 0 2px 4px rgba(0,0,0,0.6)`
-                    : "0 1px 2px rgba(0,0,0,0.4)",
+                    ? `0 0 8px ${p.color}, 0 2px 6px rgba(0,0,0,0.7)`
+                    : "0 1px 3px rgba(0,0,0,0.5)",
                 flexShrink: 0,
                 transition: "box-shadow 0.1s",
               }}
-            />
+            >
+              {PLAYER_ANIMALS[p.id] ?? "🎮"}
+            </div>
           ))}
         </div>
       )}
@@ -488,7 +495,7 @@ export function SquareBoard({
             {/* Animated dice */}
             <CenterDice dice={dice} rolling={rolling} />
 
-            {/* Turn order — clockwise */}
+            {/* Turn order — anti-clockwise */}
             <div className="flex flex-col items-center mt-1" style={{ gap: 2 }}>
               <div
                 style={{
@@ -509,17 +516,17 @@ export function SquareBoard({
                   fontWeight: 700,
                 }}
               >
-                ↻
+                ↺
               </div>
-              {/* Player order chips */}
-              <div className="flex flex-wrap justify-center" style={{ gap: 2 }}>
+              {/* Player order chips with larger animal emojis */}
+              <div className="flex flex-wrap justify-center" style={{ gap: 3 }}>
                 {activePlayers.map((p, idx) => (
                   <div
                     key={p.id}
                     title={p.name}
                     style={{
-                      width: "clamp(8px, 2vw, 14px)",
-                      height: "clamp(8px, 2vw, 14px)",
+                      width: "clamp(16px, 4vw, 28px)",
+                      height: "clamp(16px, 4vw, 28px)",
                       backgroundColor: p.color,
                       borderRadius: "50%",
                       border:
@@ -528,19 +535,25 @@ export function SquareBoard({
                           : "1.5px solid rgba(255,255,255,0.6)",
                       boxShadow:
                         p.id === currentPlayer.id
-                          ? "0 0 4px #ffd700"
+                          ? "0 0 6px #ffd700, 0 0 12px rgba(255,215,0,0.4)"
                           : "0 1px 2px rgba(0,0,0,0.3)",
                       position: "relative",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "clamp(10px, 2.5vw, 16px)",
+                      lineHeight: 1,
                     }}
                   >
+                    {PLAYER_ANIMALS[p.id] ?? "🎮"}
                     {idx === 0 && (
                       <div
                         style={{
                           position: "absolute",
-                          top: -4,
+                          top: -5,
                           left: "50%",
                           transform: "translateX(-50%)",
-                          fontSize: 4,
+                          fontSize: 5,
                           color: "#ffd700",
                           lineHeight: 1,
                           fontWeight: 700,

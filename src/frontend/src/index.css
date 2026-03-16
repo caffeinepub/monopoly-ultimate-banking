@@ -17,7 +17,6 @@
 }
 
 :root {
-  /* Board colors */
   --board-bg: oklch(0.22 0.04 145);
   --board-cell: oklch(0.97 0.01 90);
   --board-corner: oklch(0.92 0.02 90);
@@ -30,7 +29,6 @@
   --board-logo: oklch(0.18 0.08 145);
   --board-logo-sub: oklch(0.28 0.07 145);
 
-  /* App colors */
   --background: oklch(0.1 0.02 250);
   --foreground: oklch(0.97 0.01 250);
   --card: oklch(0.14 0.02 250);
@@ -67,40 +65,32 @@ body {
 .board-bg {
   background-color: var(--board-bg);
 }
-
 .font-display {
   font-family: "Bricolage Grotesque", sans-serif;
 }
 
-@keyframes dice-roll {
+@keyframes dice-spin {
   0% {
-    transform: rotate(0deg) scale(1);
+    transform: perspective(200px) rotateY(0deg) scale(1);
   }
-  15% {
-    transform: rotate(-20deg) scale(1.15);
+  25% {
+    transform: perspective(200px) rotateY(-90deg) scale(1.1);
   }
-  30% {
-    transform: rotate(15deg) scale(0.9);
-  }
-  45% {
-    transform: rotate(-10deg) scale(1.1);
-  }
-  60% {
-    transform: rotate(8deg) scale(0.95);
+  50% {
+    transform: perspective(200px) rotateY(-180deg) scale(0.9);
   }
   75% {
-    transform: rotate(-5deg) scale(1.05);
-  }
-  90% {
-    transform: rotate(3deg) scale(0.98);
+    transform: perspective(200px) rotateY(-270deg) scale(1.05);
   }
   100% {
-    transform: rotate(0deg) scale(1);
+    transform: perspective(200px) rotateY(-360deg) scale(1);
   }
 }
 
 .dice-rolling {
-  animation: dice-roll 0.25s ease-in-out infinite;
+  animation: dice-spin 0.5s linear infinite;
+  transform-style: preserve-3d;
+  backface-visibility: visible;
 }
 
 @keyframes token-hop {

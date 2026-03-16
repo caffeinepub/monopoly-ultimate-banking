@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
+import { AuctionPanel } from "./components/AuctionPanel";
 import { BankingPanel } from "./components/BankingPanel";
 import { CardModal } from "./components/CardModal";
 import { DicePair } from "./components/Dice";
 import { PropertyCard } from "./components/PropertyCard";
 import { SquareBoard } from "./components/SquareBoard";
 import { TradePanel } from "./components/TradePanel";
-import { BOARD_SPACES, PLAYER_COLORS } from "./data/board";
+import { BOARD_SPACES, PLAYER_ANIMALS, PLAYER_COLORS } from "./data/board";
 import { useGame } from "./hooks/useGame";
 
 const STORAGE_KEY = "monopoly_game_state";
@@ -59,7 +60,7 @@ export default function App() {
         setAnimatingPlayer({ playerId, position: pos });
 
         if (step < total) {
-          animationRef.current = setTimeout(stepAnimation, 150);
+          animationRef.current = setTimeout(stepAnimation, 350);
         } else {
           animationRef.current = setTimeout(() => {
             setAnimatingPlayer(null);
@@ -91,12 +92,14 @@ export default function App() {
         <div className="text-6xl mb-4">🏆</div>
         <h1 className="text-white text-3xl font-bold mb-2">Winner!</h1>
         <div
-          className="w-20 h-20 rounded-full mb-4 flex items-center justify-center text-3xl font-bold text-white"
+          className="w-20 h-20 rounded-full mb-4 flex items-center justify-center text-3xl"
           style={{
             backgroundColor: winner ? PLAYER_COLORS[winner.id] : "#888",
           }}
         >
-          {winner?.name[0].toUpperCase()}
+          {winner
+            ? (PLAYER_ANIMALS[winner.id] ?? winner.name[0].toUpperCase())
+            : "?"}
         </div>
         <p className="text-yellow-400 text-2xl font-bold mb-2">
           {winner?.name}
@@ -121,6 +124,10 @@ export default function App() {
   const propertyToBuy = state.showPropertyCard
     ? state.properties.find((p) => p.id === state.showPropertyCard)
     : undefined;
+  const auctionProperty =
+    state.showAuctionPanel && state.auctionPropertyId
+      ? state.properties.find((p) => p.id === state.auctionPropertyId)
+      : undefined;
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col max-w-md mx-auto">
@@ -147,10 +154,10 @@ export default function App() {
               style={{ backgroundColor: `${p.color}33` }}
             >
               <div
-                className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold text-white flex-shrink-0"
+                className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] flex-shrink-0"
                 style={{ backgroundColor: p.color }}
               >
-                {p.name[0].toUpperCase()}
+                {PLAYER_ANIMALS[p.id] ?? p.name[0].toUpperCase()}
               </div>
               <span className="text-[9px] font-mono text-white leading-none">
                 $
@@ -172,8 +179,9 @@ export default function App() {
         data-ocid="game.turn_banner"
       >
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-white/25 flex items-center justify-center text-sm font-black text-white">
-            {currentPlayer.name[0].toUpperCase()}
+          <div className="w-8 h-8 rounded-full bg-white/25 flex items-center justify-center text-lg">
+            {PLAYER_ANIMALS[currentPlayer.id] ??
+              currentPlayer.name[0].toUpperCase()}
           </div>
           <div>
             <p className="text-white font-black text-base leading-tight">
@@ -188,9 +196,9 @@ export default function App() {
           <span className="text-white/70 text-[10px] uppercase tracking-widest font-bold">
             Turn
           </span>
-          <span className="text-white text-2xl leading-none">↻</span>
+          <span className="text-white text-2xl leading-none">↺</span>
           <span className="text-white/70 text-[10px] font-medium">
-            Clockwise
+            Anti-clockwise
           </span>
         </div>
       </div>
@@ -236,7 +244,8 @@ export default function App() {
           )}
           {state.diceRolled &&
             !state.showPropertyCard &&
-            !state.showCardModal && (
+            !state.showCardModal &&
+            !state.showAuctionPanel && (
               <button
                 type="button"
                 data-ocid="game.end_turn_button"
@@ -270,6 +279,18 @@ export default function App() {
           playerBalance={currentPlayer.balance}
           onBuy={() => dispatch({ type: "BUY_PROPERTY" })}
           onDecline={() => dispatch({ type: "DISMISS_PROPERTY_CARD" })}
+          onAuction={() => dispatch({ type: "AUCTION_PROPERTY" })}
+        />
+      )}
+
+      {auctionProperty && (
+        <AuctionPanel
+          property={auctionProperty}
+          players={state.players}
+          onComplete={(winnerId, bidAmount) =>
+            dispatch({ type: "COMPLETE_AUCTION", winnerId, bidAmount })
+          }
+          onCancel={() => dispatch({ type: "DISMISS_PROPERTY_CARD" })}
         />
       )}
 
@@ -392,10 +413,10 @@ function SetupScreen({
         {PLAYER_SLOTS.slice(0, count).map((slotId, i) => (
           <div key={slotId} className="flex items-center gap-3">
             <div
-              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0"
+              className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0"
               style={{ backgroundColor: PLAYER_COLORS[i] }}
             >
-              {i + 1}
+              {PLAYER_ANIMALS[i]}
             </div>
             <input
               data-ocid="setup.player_name_input"

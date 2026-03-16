@@ -1,5 +1,7 @@
 import type { BoardSpace, Property } from "../types/game";
 
+export const PLAYER_ANIMALS = ["🐉", "🦁", "🐻", "🐯", "🦊", "🐺"];
+
 export const PROPERTIES: Property[] = [
   {
     id: 1,

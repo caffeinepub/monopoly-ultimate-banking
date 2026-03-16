@@ -44,10 +44,15 @@ export function Die({ value, rolling, delayMs = 0 }: DiceProps) {
   const dots = DOTS[value] || DOTS[1];
   return (
     <div
-      className={`w-14 h-14 bg-white rounded-xl border-2 border-gray-300 relative shadow-lg ${
-        rolling ? "dice-rolling" : ""
+      className={`w-16 h-16 bg-white rounded-xl relative shadow-lg ${
+        rolling
+          ? "dice-rolling border-4 border-green-400"
+          : "border-2 border-gray-300"
       }`}
-      style={rolling ? { animationDelay: `${delayMs}ms` } : undefined}
+      style={{
+        ...(rolling ? { animationDelay: `${delayMs}ms` } : {}),
+        transformStyle: "preserve-3d",
+      }}
     >
       {dots.map(([x, y]) => (
         <div

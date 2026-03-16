@@ -91,7 +91,9 @@ type Action =
   | { type: "CLOSE_TRADE" }
   | { type: "SET_TRADE"; trade: PendingTrade }
   | { type: "EXECUTE_TRADE"; trade: PendingTrade }
-  | { type: "DISMISS_CARD" };
+  | { type: "DISMISS_CARD" }
+  | { type: "AUCTION_PROPERTY" }
+  | { type: "COMPLETE_AUCTION"; winnerId: number; bidAmount: number };
 
 function getRent(
   property: Property,
@@ -330,8 +332,64 @@ function gameReducer(state: GameState, action: Action): GameState {
       };
     }
 
+    case "AUCTION_PROPERTY": {
+      if (!state.showPropertyCard) return state;
+      return {
+        ...state,
+        showAuctionPanel: true,
+        auctionPropertyId: state.showPropertyCard,
+        showPropertyCard: undefined,
+      };
+    }
+
+    case "COMPLETE_AUCTION": {
+      const { winnerId, bidAmount } = action;
+      if (bidAmount <= 0) {
+        return {
+          ...state,
+          showAuctionPanel: false,
+          auctionPropertyId: undefined,
+          message: "Auction ended — no bids placed",
+        };
+      }
+      const players = [...state.players];
+      const winner = players[winnerId];
+      if (!winner || winner.balance < bidAmount) {
+        return {
+          ...state,
+          showAuctionPanel: false,
+          auctionPropertyId: undefined,
+          message: "Auction cancelled",
+        };
+      }
+      const updatedWinner = { ...winner };
+      updatedWinner.balance -= bidAmount;
+      updatedWinner.propertyIds = [
+        ...updatedWinner.propertyIds,
+        state.auctionPropertyId!,
+      ];
+      players[winnerId] = updatedWinner;
+      const properties = state.properties.map((p) =>
+        p.id === state.auctionPropertyId ? { ...p, ownerId: winnerId } : p,
+      );
+      const prop = properties.find((p) => p.id === state.auctionPropertyId);
+      return {
+        ...state,
+        players,
+        properties,
+        showAuctionPanel: false,
+        auctionPropertyId: undefined,
+        message: `${updatedWinner.name} won auction for ${prop?.name} at $${bidAmount}M`,
+      };
+    }
+
     case "DISMISS_PROPERTY_CARD":
-      return { ...state, showPropertyCard: undefined };
+      return {
+        ...state,
+        showPropertyCard: undefined,
+        showAuctionPanel: false,
+        auctionPropertyId: undefined,
+      };
 
     case "DISMISS_CARD":
       return { ...state, showCardModal: undefined };
@@ -344,6 +402,8 @@ function gameReducer(state: GameState, action: Action): GameState {
         showBankingPanel: false,
         showTradePanel: false,
         pendingTrade: undefined,
+        showAuctionPanel: false,
+        auctionPropertyId: undefined,
       });
 
     case "PAY_JAIL": {

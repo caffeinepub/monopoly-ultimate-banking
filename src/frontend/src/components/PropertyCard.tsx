@@ -6,6 +6,7 @@ interface PropertyCardProps {
   property: Property;
   onBuy: () => void;
   onDecline: () => void;
+  onAuction: () => void;
   playerBalance: number;
 }
 
@@ -13,6 +14,7 @@ export function PropertyCard({
   property,
   onBuy,
   onDecline,
+  onAuction,
   playerBalance,
 }: PropertyCardProps) {
   const color = COLOR_MAP[property.color] || "#888";
@@ -91,12 +93,20 @@ export function PropertyCard({
             <button
               type="button"
               data-ocid="game.auction_button"
-              onClick={onDecline}
-              className="flex-1 py-3 rounded-xl font-bold bg-gray-700 text-gray-200 text-sm"
+              onClick={onAuction}
+              className="flex-1 py-3 rounded-xl font-bold bg-amber-700 hover:bg-amber-600 text-white text-sm"
             >
-              Decline
+              Auction 🔨
             </button>
           </div>
+          <button
+            type="button"
+            data-ocid="game.decline_button"
+            onClick={onDecline}
+            className="w-full py-2 rounded-xl font-semibold bg-gray-700 text-gray-400 text-xs"
+          >
+            Decline (no auction)
+          </button>
         </div>
       </div>
     </div>

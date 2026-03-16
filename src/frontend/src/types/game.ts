@@ -86,4 +86,6 @@ export interface GameState {
   showBankingPanel: boolean;
   pendingTrade?: PendingTrade;
   showCardModal?: CardModal;
+  showAuctionPanel?: boolean;
+  auctionPropertyId?: number;
 }
