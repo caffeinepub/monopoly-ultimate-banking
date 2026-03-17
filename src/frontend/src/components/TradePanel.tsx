@@ -91,8 +91,8 @@ export function TradePanel({ state, onExecute, onClose }: TradePanelProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-end z-50">
-      <div className="bg-gray-900 rounded-t-3xl w-full max-h-[90vh] overflow-y-auto p-5">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+      <div className="bg-gray-900 rounded-3xl w-full max-w-sm max-h-[85vh] overflow-y-auto mx-4 p-5">
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-white font-bold text-lg">🤝 Trade</h2>

@@ -33,7 +33,7 @@ actor {
     if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Can only view your own profile");
     };
-    userProfiles.get(user);
+    userProfiles.get(caller);
   };
 
   public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
@@ -47,7 +47,7 @@ actor {
   type Player = {
     name : Text;
     slotId : Nat;
-    principal : Principal; // Track which principal owns this slot
+    principal : Principal;
   };
 
   type Room = {
@@ -125,7 +125,6 @@ actor {
       };
       case (_) {};
     };
-    // Generate random unique code with fallback length increase
     let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     func randomCode(size : Nat) : Text {
       let code = Text.fromIter(chars.chars().take(size));
@@ -153,27 +152,8 @@ actor {
     name : Text;
   };
 
-  func countNonEmptySlots(players : [Player]) : Nat {
-    var count = 0;
-    for (p in players.values()) {
-      if (not p.name.isEmpty()) { count += 1 };
-    };
-    count;
-  };
-
-  func validatePlayerName(name : Text) {
-    let filtered = Text.fromIter(
-      name.chars().filter(
-        func(c) {
-          let isValidChar = (c >= '0' and c <= '9') or (c >= 'A' and c <= 'Z');
-          let isLetter = (c >= 'A' and c <= 'Z') or (c >= 'a' and c <= 'z');
-          isValidChar or isLetter
-        }
-      )
-    );
-    if (filtered.size() != name.size() or filtered.size() > 10) {
-      Runtime.trap("Invalid name! Please use only valid characters (alphanum only, max length 10 characters)");
-    };
+  func getAllPlayersCountFiltered(players : [Player]) : [Player] {
+    players.filter(func(player) { player.name.size() > 0 });
   };
 
   func getFreeSlot(players : [Player], maxPlayers : Nat) : Nat {
@@ -184,108 +164,29 @@ actor {
     Runtime.trap("No valid slots left");
   };
 
-  func checkDuplicateName(players : [Player], name : Text) {
-    let filteredName = Text.fromIter(
-      name.chars().filter(
-        func(c) {
-          let isValidChar = (c >= '0' and c <= '9') or (c >= 'A' and c <= 'Z');
-          let isLetter = (c >= 'A' and c <= 'Z') or (c >= 'a' and c <= 'z');
-          isValidChar or isLetter
-        }
-      )
-    );
-    let isDuplicate = players.values().any(
-      func(p) {
-        Text.equal(
-          Text.fromIter(
-            p.name.chars().filter(
-              func(c) {
-                let isValidChar = (c >= '0' and c <= '9') or (c >= 'A' and c <= 'Z');
-                let isLetter = (c >= 'A' and c <= 'Z') or (c >= 'a' and c <= 'z');
-                isValidChar or isLetter;
-              }
-            )
-          ),
-          filteredName,
-        );
-      }
-    );
-    if (isDuplicate) {
-      Runtime.trap("This name already exists");
-    };
-  };
-
-  func getAllPlayersCountFiltered(players : [Player]) : [Player] {
-    players.filter(func(player) { player.name.size() > 0 });
-  };
-
-  func isPlayerInRoom(room : Room, caller : Principal) : Bool {
-    room.players.values().any(func(p) { p.principal == caller });
-  };
-
-  func getPlayerSlotId(room : Room, caller : Principal) : ?Nat {
-    for (player in room.players.values()) {
-      if (player.principal == caller) {
-        return ?player.slotId;
-      };
-    };
-    null;
-  };
-
+  // Join a room - no authentication required, anyone can play
   public shared ({ caller }) func joinRoom(roomId : Text, playerName : Text) : async JoinRoomResult.Success {
-    // Authorization: Only authenticated users can join rooms
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can join rooms");
-    };
-
     switch (rooms.get(roomId)) {
       case (?room) {
         if (room.phase == "playing") { Runtime.trap("Game already started!") };
-        if (room.players.size() >= defaultMaxPlayers) {
-          Runtime.trap("This room is full!");
-        };
         let filteredPlayers = getAllPlayersCountFiltered(room.players);
 
         if (filteredPlayers.size() >= defaultMaxPlayers) {
-          Runtime.trap("No more slots left");
+          Runtime.trap("This room is full!");
         };
 
-        let filteredName = Text.fromIter(
-          playerName.chars().filter(
-            func(c) {
-              let isValidChar = (c >= '0' and c <= '9') or (c >= 'A' and c <= 'Z');
-              let isLetter = (c >= 'A' and c <= 'Z') or (c >= 'a' and c <= 'z');
-              isValidChar or isLetter
-            }
-          )
-        );
-        if (
-          filteredPlayers.values().any(
-            func(player) {
-              Text.equal(
-                Text.fromIter(
-                  player.name.chars().filter(
-                    func(c) {
-                      let isValidChar = (c >= '0' and c <= '9') or (c >= 'A' and c <= 'Z');
-                      let isLetter = (c >= 'A' and c <= 'Z') or (c >= 'a' and c <= 'z');
-                      isValidChar or isLetter;
-                    }
-                  )
-                ),
-                filteredName,
-              );
-            }
-          )
-        ) {
+        let trimmedName = Text.fromIter(playerName.chars().take(10));
+        if (trimmedName.isEmpty()) { Runtime.trap("Name cannot be empty") };
+
+        // Check for duplicate names
+        if (filteredPlayers.values().any(func(p) { Text.equal(p.name, trimmedName) })) {
           Runtime.trap("This name already exists");
         };
 
         let slotId : Nat = getFreeSlot(filteredPlayers, defaultMaxPlayers);
 
-        let actualName = Text.fromIter(playerName.chars().take(10));
-
         let newPlayer : Player = {
-          name = actualName;
+          name = trimmedName;
           slotId;
           principal = caller;
         };
@@ -307,40 +208,27 @@ actor {
     };
   };
 
+  // Create a room - no authentication required
   public shared ({ caller }) func createRoom({ hostName; roomId; maxPlayers } : CreateRoomInput) : async CreateRoomResult {
-    // Authorization: Only authenticated users can create rooms
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can create rooms");
-    };
-
-    if (hostName == "" or hostName == "guest") {
+    if (hostName == "") {
       return #invalidHostName({});
     };
+
+    let trimmedName = Text.fromIter(hostName.chars().take(10));
+    if (trimmedName.isEmpty()) { return #invalidHostName({}) };
+
     let maxPlayersValue = if (maxPlayers >= 2 and maxPlayers <= defaultMaxPlayers) {
       maxPlayers;
     } else {
       defaultMaxPlayers;
     };
 
-    let filteredHostName = Text.fromIter(
-      hostName.chars().filter(
-        func(c) {
-          let isValidChar = (c >= '0' and c <= '9') or (c >= 'A' and c <= 'Z');
-          let isLetter = (c >= 'A' and c <= 'Z') or (c >= 'a' and c <= 'z');
-          isValidChar or isLetter
-        }
-      )
-    );
-    if (filteredHostName.isEmpty()) { Runtime.trap("Host name cannot be empty") };
-    let actualName = Text.fromIter(filteredHostName.chars().take(10));
-
     let hostPlayer : Player = {
-      name = actualName;
+      name = trimmedName;
       slotId = 0;
       principal = caller;
     };
     let players = [hostPlayer];
-
     let fullPlayers = mapDefaultSlotsToRange(players, maxPlayersValue);
     let uniqueId = generateUniqueRoomId(roomId);
     let room : Room = {
@@ -356,22 +244,13 @@ actor {
     #success(uniqueId);
   };
 
+  // Update game state - no authentication required (room code is the access token)
   public shared ({ caller }) func updateGameState(roomId : Text, gameStateJson : Text) : async () {
-    // Authorization: Only authenticated users who are players in the room can update game state
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can update game state");
-    };
-
     switch (rooms.get(roomId)) {
       case (null) {
         Runtime.trap("Room not found");
       };
       case (?room) {
-        // Verify caller is a player in this room
-        if (not isPlayerInRoom(room, caller)) {
-          Runtime.trap("Unauthorized: You are not a player in this room");
-        };
-
         if (room.phase != "playing") { Runtime.trap("Room is not in playing phase") };
 
         let updatedRoom : Room = {
@@ -388,33 +267,18 @@ actor {
     };
   };
 
+  // Start game - no authentication required, anyone in the room can start
   public shared ({ caller }) func startGame(roomId : Text) : async () {
-    // Authorization: Only authenticated users who are the host can start the game
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can start games");
-    };
-
     switch (rooms.get(roomId)) {
       case (null) { Runtime.trap("Room not found") };
       case (?room) {
-        // Verify caller is the host
-        let hostPlayer = room.players.values().find(func(p) { p.slotId == room.hostSlotId });
-        switch (hostPlayer) {
-          case (?host) {
-            if (host.principal != caller) {
-              Runtime.trap("Unauthorized: Only the host can start the game");
-            };
-          };
-          case (_) { Runtime.trap("Host not found in room") };
-        };
-
         if (room.phase != "waiting") {
           Runtime.trap("Room is not in waiting phase");
         };
 
         let filteredPlayers = getAllPlayersCountFiltered(room.players);
         if (filteredPlayers.size() < 2) {
-          Runtime.trap("Not enough players");
+          Runtime.trap("Not enough players (need at least 2)");
         };
 
         let updatedRoom : Room = {
@@ -432,7 +296,6 @@ actor {
   };
 
   public query ({ caller }) func getRoom(roomId : Text) : async Room {
-    // Authorization: Anyone can view room data (including guests)
     switch (rooms.get(roomId)) {
       case (?room) { room };
       case (_) { Runtime.trap("Room not found") };
@@ -445,7 +308,6 @@ actor {
   };
 
   public shared ({ caller }) func cleanupOldRooms() : async () {
-    // Authorization: Admin-only function
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can cleanup old rooms");
     };
@@ -459,7 +321,6 @@ actor {
   };
 
   public query ({ caller }) func getAllRooms() : async [(Text, Room)] {
-    // Authorization: Admin-only function (exposes all room data)
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view all rooms");
     };

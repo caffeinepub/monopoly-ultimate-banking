@@ -599,6 +599,8 @@ function OnlineGameScreen({
     position: number;
   } | null>(null);
   const [pendingDice, setPendingDice] = useState<[number, number] | null>(null);
+  const [countdown, setCountdown] = useState(2);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const animationRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isPushingRef = useRef(false);
 
@@ -669,11 +671,23 @@ function OnlineGameScreen({
 
       // Show dice result before moving
       setPendingDice([d1, d2]);
+      setCountdown(2);
+      if (countdownRef.current) clearInterval(countdownRef.current);
+      countdownRef.current = setInterval(() => {
+        setCountdown((c) => {
+          if (c <= 1) {
+            if (countdownRef.current) clearInterval(countdownRef.current);
+            return 0;
+          }
+          return c - 1;
+        });
+      }, 1000);
 
       if (currentPlayer.inJail) {
         // In jail: wait 1500ms, then dispatch + clear pendingDice
         animationRef.current = setTimeout(() => {
           setPendingDice(null);
+          setCountdown(2);
           dispatch({ type: "ROLL_DICE_PREROLLED", dice: [d1, d2] });
         }, 1500);
         return;
@@ -682,28 +696,27 @@ function OnlineGameScreen({
       const startPos = currentPlayer.position;
       const playerId = currentPlayer.id;
 
-      // Wait 2500ms showing the dice result, then start movement
-      animationRef.current = setTimeout(() => {
+      // Auto-move after 2 seconds of showing dice result
+      const startMove = () => {
         let step = 0;
-
         const stepAnimation = () => {
           step += 1;
           const pos = (startPos + step) % 40;
           setAnimatingPlayer({ playerId, position: pos });
-
           if (step < total) {
             animationRef.current = setTimeout(stepAnimation, 350);
           } else {
             animationRef.current = setTimeout(() => {
               setAnimatingPlayer(null);
               setPendingDice(null);
+              setCountdown(2);
               dispatch({ type: "ROLL_DICE_PREROLLED", dice: [d1, d2] });
             }, 200);
           }
         };
-
         animationRef.current = setTimeout(stepAnimation, 80);
-      }, 2500);
+      };
+      setTimeout(startMove, 2000);
     }, 700);
   };
 
@@ -714,6 +727,7 @@ function OnlineGameScreen({
       rolling={rolling}
       animatingPlayer={animatingPlayer}
       pendingDice={pendingDice}
+      countdown={countdown}
       handleRollDice={handleRollDice}
       onlineCtx={ctx}
       isMyTurn={isMyTurn}
@@ -737,6 +751,8 @@ function GameScreen({
     position: number;
   } | null>(null);
   const [pendingDice, setPendingDice] = useState<[number, number] | null>(null);
+  const [countdown, setCountdown] = useState(2);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const animationRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -818,11 +834,23 @@ function GameScreen({
 
       // Show dice result before moving
       setPendingDice([d1, d2]);
+      setCountdown(2);
+      if (countdownRef.current) clearInterval(countdownRef.current);
+      countdownRef.current = setInterval(() => {
+        setCountdown((c) => {
+          if (c <= 1) {
+            if (countdownRef.current) clearInterval(countdownRef.current);
+            return 0;
+          }
+          return c - 1;
+        });
+      }, 1000);
 
       if (currentPlayer.inJail) {
         // In jail: wait 1500ms, then dispatch + clear pendingDice
         animationRef.current = setTimeout(() => {
           setPendingDice(null);
+          setCountdown(2);
           dispatch({ type: "ROLL_DICE_PREROLLED", dice: [d1, d2] });
         }, 1500);
         return;
@@ -831,28 +859,27 @@ function GameScreen({
       const startPos = currentPlayer.position;
       const playerId = currentPlayer.id;
 
-      // Wait 2500ms showing the dice result, then start movement
-      animationRef.current = setTimeout(() => {
+      // Auto-move after 2 seconds of showing dice result
+      const startMove = () => {
         let step = 0;
-
         const stepAnimation = () => {
           step += 1;
           const pos = (startPos + step) % 40;
           setAnimatingPlayer({ playerId, position: pos });
-
           if (step < total) {
             animationRef.current = setTimeout(stepAnimation, 350);
           } else {
             animationRef.current = setTimeout(() => {
               setAnimatingPlayer(null);
               setPendingDice(null);
+              setCountdown(2);
               dispatch({ type: "ROLL_DICE_PREROLLED", dice: [d1, d2] });
             }, 200);
           }
         };
-
         animationRef.current = setTimeout(stepAnimation, 80);
-      }, 2500);
+      };
+      setTimeout(startMove, 2000);
     }, 700);
   };
 
@@ -863,6 +890,7 @@ function GameScreen({
       rolling={rolling}
       animatingPlayer={animatingPlayer}
       pendingDice={pendingDice}
+      countdown={countdown}
       handleRollDice={handleRollDice}
       onlineCtx={null}
       isMyTurn={true}
@@ -878,6 +906,7 @@ function GameView({
   rolling,
   animatingPlayer,
   pendingDice,
+  countdown,
   handleRollDice,
   onlineCtx,
   isMyTurn,
@@ -887,6 +916,7 @@ function GameView({
   rolling: boolean;
   animatingPlayer: { playerId: number; position: number } | null;
   pendingDice: [number, number] | null;
+  countdown: number;
   handleRollDice: () => void;
   onlineCtx: OnlineCtx | null;
   isMyTurn: boolean;
@@ -1009,8 +1039,41 @@ function GameView({
         <p className="text-yellow-300 text-xs leading-tight">{state.message}</p>
       </div>
 
-      {/* Square Board */}
-      <div className="flex-shrink-0 w-full">
+      {/* Square Board + Left Action Panel */}
+      <div className="flex-shrink-0 w-full relative">
+        {/* Left side action buttons */}
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-2 pl-1">
+          <button
+            type="button"
+            onClick={() => dispatch({ type: "OPEN_TRADE" })}
+            className="flex flex-col items-center justify-center w-10 h-12 bg-purple-800/90 hover:bg-purple-700 rounded-r-xl text-white shadow-lg border-r-2 border-t-2 border-b-2 border-purple-500/60 backdrop-blur-sm"
+          >
+            <span className="text-base leading-none">🤝</span>
+            <span className="text-[9px] font-bold leading-tight mt-0.5">
+              Trade
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => dispatch({ type: "TOGGLE_BANKING" })}
+            className="flex flex-col items-center justify-center w-10 h-12 bg-amber-800/90 hover:bg-amber-700 rounded-r-xl text-white shadow-lg border-r-2 border-t-2 border-b-2 border-amber-500/60 backdrop-blur-sm"
+          >
+            <span className="text-base leading-none">🏦</span>
+            <span className="text-[9px] font-bold leading-tight mt-0.5">
+              Mortg.
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => dispatch({ type: "TOGGLE_BANKING" })}
+            className="flex flex-col items-center justify-center w-10 h-12 bg-green-800/90 hover:bg-green-700 rounded-r-xl text-white shadow-lg border-r-2 border-t-2 border-b-2 border-green-500/60 backdrop-blur-sm"
+          >
+            <span className="text-base leading-none">💰</span>
+            <span className="text-[9px] font-bold leading-tight mt-0.5">
+              Redeem
+            </span>
+          </button>
+        </div>
         <SquareBoard
           spaces={BOARD_SPACES}
           properties={state.properties}
@@ -1030,9 +1093,11 @@ function GameView({
         <DicePair
           dice={displayDice}
           rolling={rolling}
-          tappable={isMyTurn && !state.diceRolled && !rolling}
+          tappable={
+            isMyTurn && !state.diceRolled && !rolling && pendingDice === null
+          }
           onClick={
-            isMyTurn && !state.diceRolled && !rolling
+            isMyTurn && !state.diceRolled && !rolling && pendingDice === null
               ? handleRollDice
               : undefined
           }
@@ -1049,6 +1114,9 @@ function GameView({
             <span className="text-yellow-300 font-black text-2xl tracking-wide bg-yellow-400/20 rounded-xl px-4 py-2 border border-yellow-400/40 inline-block">
               🎲 Rolled {pendingDice[0] + pendingDice[1]}!
             </span>
+            <p className="text-gray-400 text-xs mt-1">
+              Moving in {countdown}s...
+            </p>
           </div>
         )}
         <div className="flex gap-2">
