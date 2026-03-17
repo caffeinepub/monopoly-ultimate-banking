@@ -58,7 +58,7 @@ function initProperties(): Property[] {
   return PROPERTIES.map((p) => ({ ...p }));
 }
 
-function createInitialState(): GameState {
+export function createInitialState(): GameState {
   return {
     phase: "lobby",
     players: [],
@@ -275,7 +275,7 @@ function applyDiceRoll(state: GameState, d1: number, d2: number): GameState {
   };
 }
 
-function gameReducer(state: GameState, action: Action): GameState {
+export function gameReducer(state: GameState, action: Action): GameState {
   switch (action.type) {
     case "START_SETUP":
       return { ...state, phase: "setup" };
@@ -539,15 +539,12 @@ function gameReducer(state: GameState, action: Action): GameState {
       if (toPlayer.balance < trade.requestCash)
         return { ...state, message: "Target player doesn't have enough cash" };
 
-      // Transfer cash
       fromPlayer.balance =
         fromPlayer.balance - trade.offerCash + trade.requestCash;
       toPlayer.balance = toPlayer.balance - trade.requestCash + trade.offerCash;
 
-      // Transfer properties
       const properties = state.properties.map((p) => {
         if (trade.offerPropertyIds.includes(p.id)) {
-          // from -> to
           fromPlayer.propertyIds = fromPlayer.propertyIds.filter(
             (id) => id !== p.id,
           );
@@ -555,7 +552,6 @@ function gameReducer(state: GameState, action: Action): GameState {
           return { ...p, ownerId: toPlayer.id };
         }
         if (trade.requestPropertyIds.includes(p.id)) {
-          // to -> from
           toPlayer.propertyIds = toPlayer.propertyIds.filter(
             (id) => id !== p.id,
           );

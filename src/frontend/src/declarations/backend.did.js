@@ -8,10 +8,132 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
-export const idlService = IDL.Service({});
+export const UserRole = IDL.Variant({
+  'admin' : IDL.Null,
+  'user' : IDL.Null,
+  'guest' : IDL.Null,
+});
+export const CreateRoomInput = IDL.Record({
+  'hostName' : IDL.Text,
+  'roomId' : IDL.Opt(IDL.Text),
+  'maxPlayers' : IDL.Nat,
+});
+export const CreateRoomResult = IDL.Variant({
+  'createFailed' : IDL.Null,
+  'permissionDenied' : IDL.Null,
+  'invalidHostName' : IDL.Record({}),
+  'roomInUse' : IDL.Null,
+  'success' : IDL.Text,
+  'roomIdAlreadyExists' : IDL.Null,
+  'notSupported' : IDL.Null,
+  'unavailable' : IDL.Null,
+});
+export const Player = IDL.Record({
+  'principal' : IDL.Principal,
+  'name' : IDL.Text,
+  'slotId' : IDL.Nat,
+});
+export const Room = IDL.Record({
+  'code' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'gameStateJson' : IDL.Text,
+  'players' : IDL.Vec(Player),
+  'phase' : IDL.Text,
+  'hostSlotId' : IDL.Nat,
+  'maxPlayers' : IDL.Nat,
+});
+export const UserProfile = IDL.Record({ 'name' : IDL.Text });
+export const Success = IDL.Variant({
+  'ok' : IDL.Record({ 'code' : IDL.Text, 'slotId' : IDL.Nat }),
+});
+
+export const idlService = IDL.Service({
+  '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'cleanupOldRooms' : IDL.Func([], [], []),
+  'createRoom' : IDL.Func([CreateRoomInput], [CreateRoomResult], []),
+  'getAllRooms' : IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Text, Room))], ['query']),
+  'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
+  'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getRoom' : IDL.Func([IDL.Text], [Room], ['query']),
+  'getUserProfile' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Opt(UserProfile)],
+      ['query'],
+    ),
+  'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'joinRoom' : IDL.Func([IDL.Text, IDL.Text], [Success], []),
+  'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'startGame' : IDL.Func([IDL.Text], [], []),
+  'updateGameState' : IDL.Func([IDL.Text, IDL.Text], [], []),
+});
 
 export const idlInitArgs = [];
 
-export const idlFactory = ({ IDL }) => { return IDL.Service({}); };
+export const idlFactory = ({ IDL }) => {
+  const UserRole = IDL.Variant({
+    'admin' : IDL.Null,
+    'user' : IDL.Null,
+    'guest' : IDL.Null,
+  });
+  const CreateRoomInput = IDL.Record({
+    'hostName' : IDL.Text,
+    'roomId' : IDL.Opt(IDL.Text),
+    'maxPlayers' : IDL.Nat,
+  });
+  const CreateRoomResult = IDL.Variant({
+    'createFailed' : IDL.Null,
+    'permissionDenied' : IDL.Null,
+    'invalidHostName' : IDL.Record({}),
+    'roomInUse' : IDL.Null,
+    'success' : IDL.Text,
+    'roomIdAlreadyExists' : IDL.Null,
+    'notSupported' : IDL.Null,
+    'unavailable' : IDL.Null,
+  });
+  const Player = IDL.Record({
+    'principal' : IDL.Principal,
+    'name' : IDL.Text,
+    'slotId' : IDL.Nat,
+  });
+  const Room = IDL.Record({
+    'code' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'gameStateJson' : IDL.Text,
+    'players' : IDL.Vec(Player),
+    'phase' : IDL.Text,
+    'hostSlotId' : IDL.Nat,
+    'maxPlayers' : IDL.Nat,
+  });
+  const UserProfile = IDL.Record({ 'name' : IDL.Text });
+  const Success = IDL.Variant({
+    'ok' : IDL.Record({ 'code' : IDL.Text, 'slotId' : IDL.Nat }),
+  });
+  
+  return IDL.Service({
+    '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'cleanupOldRooms' : IDL.Func([], [], []),
+    'createRoom' : IDL.Func([CreateRoomInput], [CreateRoomResult], []),
+    'getAllRooms' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Text, Room))],
+        ['query'],
+      ),
+    'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
+    'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getRoom' : IDL.Func([IDL.Text], [Room], ['query']),
+    'getUserProfile' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(UserProfile)],
+        ['query'],
+      ),
+    'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'joinRoom' : IDL.Func([IDL.Text, IDL.Text], [Success], []),
+    'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'startGame' : IDL.Func([IDL.Text], [], []),
+    'updateGameState' : IDL.Func([IDL.Text, IDL.Text], [], []),
+  });
+};
 
 export const init = ({ IDL }) => { return []; };

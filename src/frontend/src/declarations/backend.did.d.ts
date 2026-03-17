@@ -10,7 +10,54 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
-export interface _SERVICE {}
+export interface CreateRoomInput {
+  'hostName' : string,
+  'roomId' : [] | [string],
+  'maxPlayers' : bigint,
+}
+export type CreateRoomResult = { 'createFailed' : null } |
+  { 'permissionDenied' : null } |
+  { 'invalidHostName' : {} } |
+  { 'roomInUse' : null } |
+  { 'success' : string } |
+  { 'roomIdAlreadyExists' : null } |
+  { 'notSupported' : null } |
+  { 'unavailable' : null };
+export interface Player {
+  'principal' : Principal,
+  'name' : string,
+  'slotId' : bigint,
+}
+export interface Room {
+  'code' : string,
+  'createdAt' : bigint,
+  'gameStateJson' : string,
+  'players' : Array<Player>,
+  'phase' : string,
+  'hostSlotId' : bigint,
+  'maxPlayers' : bigint,
+}
+export type Success = { 'ok' : { 'code' : string, 'slotId' : bigint } };
+export interface UserProfile { 'name' : string }
+export type UserRole = { 'admin' : null } |
+  { 'user' : null } |
+  { 'guest' : null };
+export interface _SERVICE {
+  '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'cleanupOldRooms' : ActorMethod<[], undefined>,
+  'createRoom' : ActorMethod<[CreateRoomInput], CreateRoomResult>,
+  'getAllRooms' : ActorMethod<[], Array<[string, Room]>>,
+  'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
+  'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getRoom' : ActorMethod<[string], Room>,
+  'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'isCallerAdmin' : ActorMethod<[], boolean>,
+  'joinRoom' : ActorMethod<[string, string], Success>,
+  'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'startGame' : ActorMethod<[string], undefined>,
+  'updateGameState' : ActorMethod<[string, string], undefined>,
+}
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];
 export declare const idlFactory: IDL.InterfaceFactory;

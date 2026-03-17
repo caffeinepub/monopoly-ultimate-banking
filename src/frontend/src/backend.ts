@@ -89,10 +89,424 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface backendInterface {
+export interface Player {
+    principal: Principal;
+    name: string;
+    slotId: bigint;
 }
+export type CreateRoomResult = {
+    __kind__: "createFailed";
+    createFailed: null;
+} | {
+    __kind__: "permissionDenied";
+    permissionDenied: null;
+} | {
+    __kind__: "invalidHostName";
+    invalidHostName: {
+    };
+} | {
+    __kind__: "roomInUse";
+    roomInUse: null;
+} | {
+    __kind__: "success";
+    success: string;
+} | {
+    __kind__: "roomIdAlreadyExists";
+    roomIdAlreadyExists: null;
+} | {
+    __kind__: "notSupported";
+    notSupported: null;
+} | {
+    __kind__: "unavailable";
+    unavailable: null;
+};
+export type Success = {
+    __kind__: "ok";
+    ok: {
+        code: string;
+        slotId: bigint;
+    };
+};
+export interface Room {
+    code: string;
+    createdAt: bigint;
+    gameStateJson: string;
+    players: Array<Player>;
+    phase: string;
+    hostSlotId: bigint;
+    maxPlayers: bigint;
+}
+export interface UserProfile {
+    name: string;
+}
+export interface CreateRoomInput {
+    hostName: string;
+    roomId?: string;
+    maxPlayers: bigint;
+}
+export enum UserRole {
+    admin = "admin",
+    user = "user",
+    guest = "guest"
+}
+export interface backendInterface {
+    _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
+    assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    cleanupOldRooms(): Promise<void>;
+    createRoom(arg0: CreateRoomInput): Promise<CreateRoomResult>;
+    getAllRooms(): Promise<Array<[string, Room]>>;
+    getCallerUserProfile(): Promise<UserProfile | null>;
+    getCallerUserRole(): Promise<UserRole>;
+    getRoom(roomId: string): Promise<Room>;
+    getUserProfile(user: Principal): Promise<UserProfile | null>;
+    isCallerAdmin(): Promise<boolean>;
+    joinRoom(roomId: string, playerName: string): Promise<Success>;
+    saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    startGame(roomId: string): Promise<void>;
+    updateGameState(roomId: string, gameStateJson: string): Promise<void>;
+}
+import type { CreateRoomInput as _CreateRoomInput, CreateRoomResult as _CreateRoomResult, Success as _Success, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
+    async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor._initializeAccessControlWithSecret(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor._initializeAccessControlWithSecret(arg0);
+            return result;
+        }
+    }
+    async assignCallerUserRole(arg0: Principal, arg1: UserRole): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n1(this._uploadFile, this._downloadFile, arg1));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n1(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
+    async cleanupOldRooms(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.cleanupOldRooms();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.cleanupOldRooms();
+            return result;
+        }
+    }
+    async createRoom(arg0: CreateRoomInput): Promise<CreateRoomResult> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.createRoom(to_candid_CreateRoomInput_n3(this._uploadFile, this._downloadFile, arg0));
+                return from_candid_CreateRoomResult_n5(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.createRoom(to_candid_CreateRoomInput_n3(this._uploadFile, this._downloadFile, arg0));
+            return from_candid_CreateRoomResult_n5(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getAllRooms(): Promise<Array<[string, Room]>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllRooms();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllRooms();
+            return result;
+        }
+    }
+    async getCallerUserProfile(): Promise<UserProfile | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCallerUserProfile();
+                return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCallerUserProfile();
+            return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getCallerUserRole(): Promise<UserRole> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCallerUserRole();
+                return from_candid_UserRole_n8(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCallerUserRole();
+            return from_candid_UserRole_n8(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getRoom(arg0: string): Promise<Room> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getRoom(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getRoom(arg0);
+            return result;
+        }
+    }
+    async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getUserProfile(arg0);
+                return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getUserProfile(arg0);
+            return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async isCallerAdmin(): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.isCallerAdmin();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.isCallerAdmin();
+            return result;
+        }
+    }
+    async joinRoom(arg0: string, arg1: string): Promise<Success> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.joinRoom(arg0, arg1);
+                return from_candid_Success_n10(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.joinRoom(arg0, arg1);
+            return from_candid_Success_n10(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.saveCallerUserProfile(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.saveCallerUserProfile(arg0);
+            return result;
+        }
+    }
+    async startGame(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.startGame(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.startGame(arg0);
+            return result;
+        }
+    }
+    async updateGameState(arg0: string, arg1: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateGameState(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateGameState(arg0, arg1);
+            return result;
+        }
+    }
+}
+function from_candid_CreateRoomResult_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _CreateRoomResult): CreateRoomResult {
+    return from_candid_variant_n6(_uploadFile, _downloadFile, value);
+}
+function from_candid_Success_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Success): Success {
+    return from_candid_variant_n11(_uploadFile, _downloadFile, value);
+}
+function from_candid_UserRole_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
+    return from_candid_variant_n9(_uploadFile, _downloadFile, value);
+}
+function from_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_variant_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: {
+        code: string;
+        slotId: bigint;
+    };
+}): {
+    __kind__: "ok";
+    ok: {
+        code: string;
+        slotId: bigint;
+    };
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: value.ok
+    } : value;
+}
+function from_candid_variant_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    createFailed: null;
+} | {
+    permissionDenied: null;
+} | {
+    invalidHostName: {
+    };
+} | {
+    roomInUse: null;
+} | {
+    success: string;
+} | {
+    roomIdAlreadyExists: null;
+} | {
+    notSupported: null;
+} | {
+    unavailable: null;
+}): {
+    __kind__: "createFailed";
+    createFailed: null;
+} | {
+    __kind__: "permissionDenied";
+    permissionDenied: null;
+} | {
+    __kind__: "invalidHostName";
+    invalidHostName: {
+    };
+} | {
+    __kind__: "roomInUse";
+    roomInUse: null;
+} | {
+    __kind__: "success";
+    success: string;
+} | {
+    __kind__: "roomIdAlreadyExists";
+    roomIdAlreadyExists: null;
+} | {
+    __kind__: "notSupported";
+    notSupported: null;
+} | {
+    __kind__: "unavailable";
+    unavailable: null;
+} {
+    return "createFailed" in value ? {
+        __kind__: "createFailed",
+        createFailed: value.createFailed
+    } : "permissionDenied" in value ? {
+        __kind__: "permissionDenied",
+        permissionDenied: value.permissionDenied
+    } : "invalidHostName" in value ? {
+        __kind__: "invalidHostName",
+        invalidHostName: value.invalidHostName
+    } : "roomInUse" in value ? {
+        __kind__: "roomInUse",
+        roomInUse: value.roomInUse
+    } : "success" in value ? {
+        __kind__: "success",
+        success: value.success
+    } : "roomIdAlreadyExists" in value ? {
+        __kind__: "roomIdAlreadyExists",
+        roomIdAlreadyExists: value.roomIdAlreadyExists
+    } : "notSupported" in value ? {
+        __kind__: "notSupported",
+        notSupported: value.notSupported
+    } : "unavailable" in value ? {
+        __kind__: "unavailable",
+        unavailable: value.unavailable
+    } : value;
+}
+function from_candid_variant_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    admin: null;
+} | {
+    user: null;
+} | {
+    guest: null;
+}): UserRole {
+    return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
+}
+function to_candid_CreateRoomInput_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: CreateRoomInput): _CreateRoomInput {
+    return to_candid_record_n4(_uploadFile, _downloadFile, value);
+}
+function to_candid_UserRole_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
+    return to_candid_variant_n2(_uploadFile, _downloadFile, value);
+}
+function to_candid_record_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    hostName: string;
+    roomId?: string;
+    maxPlayers: bigint;
+}): {
+    hostName: string;
+    roomId: [] | [string];
+    maxPlayers: bigint;
+} {
+    return {
+        hostName: value.hostName,
+        roomId: value.roomId ? candid_some(value.roomId) : candid_none(),
+        maxPlayers: value.maxPlayers
+    };
+}
+function to_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): {
+    admin: null;
+} | {
+    user: null;
+} | {
+    guest: null;
+} {
+    return value == UserRole.admin ? {
+        admin: null
+    } : value == UserRole.user ? {
+        user: null
+    } : value == UserRole.guest ? {
+        guest: null
+    } : value;
 }
 export interface CreateActorOptions {
     agent?: Agent;
